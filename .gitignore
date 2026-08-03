@@ -1,0 +1,20 @@
+# Build folders
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio & VS Code
+.vs/
+.vscode/
+*.suo
+*.user
+
+# Local Databases (Crucial for SQLite later)
+*.db
+*.db-journal
+*.sqlite
+
+# OS files
+.DS_Store
+Thumbs.db
