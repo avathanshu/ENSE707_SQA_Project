@@ -1,0 +1,104 @@
+@* TrendChart.razor
+   Draws a simple line chart as hand-built SVG. We do this instead of pulling
+   in a charting NuGet package so the project stays fully offline/dependency-
+   free, matching the "no external network dependency" non-functional
+   requirement. Good enough for a semester project's data volume. *@
+
+@if (Points == null || Points.Count == 0)
+{
+    <p><em>No data yet for @Title.</em></p>
+}
+else
+{
+    <div class="trend-chart">
+        <h4>@Title</h4>
+        @* BuildSvg() below computes the actual <svg> markup as a string,
+           and MarkupString tells Blazor "trust this HTML, don't escape it" —
+           safe here because we generated it ourselves from numeric data,
+           not from unsanitised user input. *@
+        @((MarkupString)BuildSvg())
+    </div>
+}
+
+@code {
+    // The chart's heading, e.g. "POST /checkout — p95 latency (ms)".
+    // [Parameter] makes this settable by whoever uses <TrendChart Title="..." />.
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+    // The data to plot: one (timestamp, value) pair per test run, expected
+    // to already be sorted oldest-first by the caller.
+    [Parameter] public List<(DateTime Timestamp, double Value)>? Points { get; set; }
+
+    // Fixed drawing-surface size, in SVG user units (roughly pixels).
+    private const int Width = 600;
+    private const int Height = 200;
+    private const int Padding = 30; // margin so labels/lines aren't clipped at the edges
+
+    // Builds the <svg> markup for the current Points as a plain string.
+    // Doing this in code (rather than nested Razor @foreach + <line> tags)
+    // keeps the coordinate math in one place and easy to follow line-by-line.
+    private string BuildSvg()
+    {
+        var points = Points!; // null-checked by the @if above before this is called
+
+        var minValue = points.Min(p => p.Value);
+        var maxValue = points.Max(p => p.Value);
+
+        // Avoid a divide-by-zero if every value is identical (flat line):
+        // widen the range artificially so the plotting math below still works.
+        if (Math.Abs(maxValue - minValue) < 0.0001)
+        {
+            maxValue += 1;
+        }
+
+        var plotWidth = Width - (Padding * 2);
+        var plotHeight = Height - (Padding * 2);
+
+        // Converts a data point's index and value into actual SVG (x, y)
+        // pixel coordinates within the padded drawing area.
+        (double X, double Y) ToPixel(int index, double value)
+        {
+            // X spreads points evenly across the width based on their order.
+            var x = Padding + (points.Count <= 1
+                ? plotWidth / 2.0
+                : index / (double)(points.Count - 1) * plotWidth);
+
+            // Y is inverted because SVG's origin (0,0) is top-left, so a
+            // HIGHER value must produce a SMALLER y to appear higher on screen.
+            var normalized = (value - minValue) / (maxValue - minValue);
+            var y = Padding + (1 - normalized) * plotHeight;
+
+            return (x, y);
+        }
+
+        // Build the "x1,y1 x2,y2 ..." coordinate string for an SVG <polyline>,
+        // which draws straight segments connecting each consecutive point.
+        var coordinates = string.Join(" ", points.Select((p, i) =>
+        {
+            var (x, y) = ToPixel(i, p.Value);
+            // "F1" = 1 decimal place is plenty of precision for on-screen pixels.
+            return $"{x:F1},{y:F1}";
+        }));
+
+        // Composes the final SVG: a border rectangle, the data polyline, and
+        // small circles marking each individual data point.
+        var svg = new System.Text.StringBuilder();
+        svg.Append($"<svg viewBox=\"0 0 {Width} {Height}\" xmlns=\"http://www.w3.org/2000/svg\">");
+
+        // Background/border so the chart area is visible even with no data variation.
+        svg.Append($"<rect x=\"0\" y=\"0\" width=\"{Width}\" height=\"{Height}\" fill=\"none\" stroke=\"#ddd\" />");
+
+        // The line connecting every point in order.
+        svg.Append($"<polyline points=\"{coordinates}\" fill=\"none\" stroke=\"#2b6cb0\" stroke-width=\"2\" />");
+
+        // One small circle per data point, so individual runs are visible/hoverable.
+        for (int i = 0; i < points.Count; i++)
+        {
+            var (x, y) = ToPixel(i, points[i].Value);
+            svg.Append($"<circle cx=\"{x:F1}\" cy=\"{y:F1}\" r=\"3\" fill=\"#2b6cb0\" />");
+        }
+
+        svg.Append("</svg>");
+        return svg.ToString();
+    }
+}

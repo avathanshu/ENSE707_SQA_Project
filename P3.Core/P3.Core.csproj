@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- This is a plain class library (no UI), so it targets the base .NET SDK. -->
+    <TargetFramework>net8.0</TargetFramework>
+
+    <!-- Enables 'string?' vs 'string' distinction, which we rely on for the
+         nullable AnomalyDetected field and JSON deserialization fallbacks. -->
+    <Nullable>enable</Nullable>
+
+    <!-- Turns on newer C# language features used above (e.g. target-typed 'new()'). -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Deliberately no NuGet package references: everything used here
+         (System.Text.Json, System.Linq, etc.) ships in the base .NET SDK,
+         which keeps the project buildable fully offline. -->
+  </PropertyGroup>
+
+</Project>

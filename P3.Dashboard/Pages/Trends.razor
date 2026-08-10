@@ -1,0 +1,67 @@
+@* Trends.razor
+   The "historical trend view" required by P3's scope: plots p95 latency
+   over time, per endpoint, across every stored build so a slow creeping
+   regression (not just a single bad build) is visible at a glance. *@
+@page "/trends"
+@inject ITestRunStore RunStore
+
+<h1>Historical Trends</h1>
+
+@if (_endpointNames.Count == 0)
+{
+    <p><em>No test run data available yet.</em></p>
+}
+else
+{
+    @* One TrendChart per distinct endpoint name found across all runs. *@
+    @foreach (var endpointName in _endpointNames)
+    {
+        <TrendChart Title="@($"{endpointName} — p95 latency (ms)")"
+                    Points="@GetPointsForEndpoint(endpointName)" />
+    }
+}
+
+@code {
+    // All runs, loaded once and reused by every chart below rather than
+    // re-querying the store per endpoint.
+    private List<TestRun> _allRuns = new();
+
+    // The distinct set of endpoint names seen across all runs, used to
+    // decide how many charts to render and in what order.
+    private List<string> _endpointNames = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        // ToList() materialises the IReadOnlyList into a List we can reuse.
+        _allRuns = RunStore.GetAllRuns().ToList();
+
+        // SelectMany flattens "each run's list of endpoint metrics" into a
+        // single sequence of endpoint names; Distinct removes duplicates;
+        // OrderBy gives a stable, alphabetical chart order.
+        _endpointNames = _allRuns
+            .SelectMany(r => r.EndpointMetrics.Select(m => m.EndpointName))
+            .Distinct()
+            .OrderBy(name => name)
+            .ToList();
+
+        return Task.CompletedTask;
+    }
+
+    // Builds the (timestamp, p95) point list for one endpoint, across every
+    // run that measured it, oldest-first — exactly what TrendChart expects.
+    private List<(DateTime Timestamp, double Value)> GetPointsForEndpoint(string endpointName)
+    {
+        return _allRuns
+            // Only keep runs that actually measured this endpoint.
+            .Where(r => r.EndpointMetrics.Any(m => m.EndpointName == endpointName))
+            .OrderBy(r => r.Timestamp)
+            .Select(r =>
+            {
+                // First(...) is safe here because the Where above already
+                // guarantees at least one matching metric exists in this run.
+                var metric = r.EndpointMetrics.First(m => m.EndpointName == endpointName);
+                return (r.Timestamp, metric.LatencyP95Ms);
+            })
+            .ToList();
+    }
+}

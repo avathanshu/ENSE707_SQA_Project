@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Sdk="Microsoft.NET.Sdk.Web" (not the plain Sdk used by P3.Core) is what
+       makes this a runnable ASP.NET Core / Blazor Server web app instead of
+       a class library. -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pulls in all the persistence/regression/reporting logic from P3.Core
+         so the dashboard is purely presentation — it never touches JSON
+         files or comparison math directly, only the interfaces. -->
+    <ProjectReference Include="..\P3.Core\P3.Core.csproj" />
+  </ItemGroup>
+
+</Project>

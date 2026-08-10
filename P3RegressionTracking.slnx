@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="P3.Core/P3.Core.csproj" />
+  <Project Path="P3.Dashboard/P3.Dashboard.csproj" />
+</Solution>

@@ -1,0 +1,138 @@
+@* Dashboard.razor
+   The landing page ("/"). Shows the most recent test run's metrics plus the
+   regression detector's verdict for that run against build history —
+   i.e. "what does the latest build look like right now". *@
+@page "/"
+
+@* @inject asks the DI container (set up in Program.cs) for these services
+   and makes them available as fields in this component. *@
+@inject ITestRunStore RunStore
+@inject IRegressionDetector Detector
+@inject IReportExporter ReportExporter
+
+<h1>Live QA Dashboard</h1>
+
+@if (_latestRun == null)
+{
+    <p><em>No test runs recorded yet. Waiting on data from P1/P2...</em></p>
+}
+else
+{
+    <p>
+        Latest build: <strong>@_latestRun.BuildId</strong>
+        (@_latestRun.Timestamp.ToString("u"), profile: @_latestRun.LoadProfile)
+    </p>
+
+    <h2>Endpoint Metrics</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Endpoint</th>
+                <th>p50 (ms)</th>
+                <th>p95 (ms)</th>
+                <th>p99 (ms)</th>
+                <th>Error %</th>
+                <th>Throughput (rps)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* @foreach loops over the latest run's per-endpoint metrics,
+               rendering one table row per endpoint. *@
+            @foreach (var metric in _latestRun.EndpointMetrics)
+            {
+                <tr>
+                    <td>@metric.EndpointName</td>
+                    <td>@metric.LatencyP50Ms.ToString("F1")</td>
+                    <td>@metric.LatencyP95Ms.ToString("F1")</td>
+                    <td>@metric.LatencyP99Ms.ToString("F1")</td>
+                    <td>@metric.ErrorRatePercent.ToString("F2")</td>
+                    <td>@metric.ThroughputRps.ToString("F1")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Regression Flags (vs. build history)</h2>
+    @if (_regressionResults.Count == 0)
+    {
+        <p><em>Not enough history yet to compute a baseline.</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Severity</th>
+                    <th>% Change vs Baseline</th>
+                    <th>Explanation</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var result in _regressionResults)
+                {
+                    @* Ternary picks a CSS class per severity so breaches/warnings
+                       are visually distinct (styled in wwwroot/css/app.css). *@
+                    <tr class="@(result.Severity == RegressionSeverity.Major ? "severity-major" : result.Severity == RegressionSeverity.Minor ? "severity-minor" : "")">
+                        <td>@result.EndpointName</td>
+                        <td>@result.Severity</td>
+                        <td>@result.PercentChange.ToString("F1")%</td>
+                        <td>@result.Explanation</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h2>QA Report</h2>
+    <button class="btn-export" @onclick="ExportReport">Export Report (Markdown)</button>
+
+    @* Only shown after the button above has been clicked at least once. *@
+    @if (!string.IsNullOrEmpty(_lastExportPath))
+    {
+        <p>Report written to: <code>@_lastExportPath</code></p>
+    }
+}
+
+@code {
+    // Backing fields for everything the markup above reads. Kept nullable/
+    // empty by default so the page renders sensibly before data loads.
+    private TestRun? _latestRun;
+    private List<RegressionResult> _regressionResults = new();
+    private string? _lastExportPath;
+
+    // OnInitializedAsync runs once when the component is first created —
+    // the natural place to do the initial data load for the page.
+    protected override Task OnInitializedAsync()
+    {
+        LoadData();
+        return Task.CompletedTask;
+    }
+
+    // Re-reads the store and re-runs regression detection. Pulled into its
+    // own method so both OnInitializedAsync and the manual refresh button
+    // (if added later) can reuse it without duplicating logic.
+    private void LoadData()
+    {
+        var allRuns = RunStore.GetAllRuns(); // oldest-first, per ITestRunStore's contract
+
+        // The latest run is simply the last element once sorted oldest-first.
+        _latestRun = allRuns.Count > 0 ? allRuns[^1] : null;
+
+        // Compare the latest run against everything before it.
+        _regressionResults = _latestRun == null
+            ? new List<RegressionResult>()
+            : Detector.DetectRegressions(_latestRun, allRuns);
+    }
+
+    // Wired to the "Export Report" button's @onclick above.
+    private void ExportReport()
+    {
+        var allRuns = RunStore.GetAllRuns();
+
+        // Recompute regression results across every run's latest-vs-history
+        // comparison isn't necessary for the report — we only need the
+        // CURRENT set of flags, which we already have in _regressionResults.
+        _lastExportPath = ReportExporter.Export(allRuns, _regressionResults, "qa-report.md");
+    }
+}
