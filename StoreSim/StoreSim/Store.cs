@@ -1,98 +1,199 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using Npgsql;
 
 namespace StoreSim
 {
     public class Store
     {
-        public List<Product> Inventory { get; set; } = new();
+        private readonly string _connectionString = "Host=localhost;Port=5432;Database=StoreSimDB;Username=postgres;Password=GitGudAdminT3$t";
 
-        // Dictionary to keep track of active carts for each customer
-        private Dictionary<int, List<Cart>> _activeCarts = new();
-
-        public void AddProduct(Product product)
+        public Product GetProduct(int productId)
         {
-            Inventory.Add(product);
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new NpgsqlCommand("SELECT id, name, description, category, quantity, price FROM products WHERE id = @id", conn);
+            cmd.Parameters.AddWithValue("id", productId);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new Product
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Description = reader.GetString(2),
+                    Category = reader.GetString(3),
+                    Quantity = reader.GetInt32(4),
+                    Price = reader.GetDecimal(5)
+                };
+            }
+            return null;
+        }
+
+        public int RegisterCustomer(string name)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+            
+            string query = "INSERT INTO customers (name) VALUES (@name) RETURNING id";
+            using var cmd = new NpgsqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("name", name);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
         public bool ReserveItem(int customerId, int productId, int quantityForCart)
         {
-            var product = Inventory.Find(p => p.Id == productId);
-            if (product == null || product.Quantity < quantityForCart)
-            {
-                return false; // Product not found or insufficient stock
-            }
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
 
-            product.Quantity -= quantityForCart; // Reserve the items by reducing stock
+            try
+            {
+                // check stock
+                int currentStock = 0;
+                using (var checkCmd = new NpgsqlCommand("SELECT quantity FROM products WHERE id = @pId FOR UPDATE", conn, transaction))
+                {
+                    checkCmd.Parameters.AddWithValue("pId", productId);
+                    var result = checkCmd.ExecuteScalar();
+                    if (result == null) return false;
+                    currentStock = Convert.ToInt32(result);
+                }
 
-            if (!_activeCarts.ContainsKey(customerId))
-            {
-                _activeCarts[customerId] = new List<Cart>();
-            }
+                if (currentStock < quantityForCart)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
 
-            var cart = _activeCarts[customerId].Find(c => c.ProductId == productId);
-            if (cart != null)
-            {
-                cart.Quantity += quantityForCart;
+                // reduce stock
+                using (var updateCmd = new NpgsqlCommand("UPDATE products SET quantity = quantity - @qty WHERE id = @pId", conn, transaction))
+                {
+                    updateCmd.Parameters.AddWithValue("qty", quantityForCart);
+                    updateCmd.Parameters.AddWithValue("pId", productId);
+                    updateCmd.ExecuteNonQuery();
+                }
+
+                // update carty
+                using (var cartCmd = new NpgsqlCommand(@"
+                    INSERT INTO cart_items (customer_id, product_id, quantity) 
+                    VALUES (@cId, @pId, @qty)
+                    ON CONFLICT (customer_id, product_id) 
+                    DO UPDATE SET quantity = cart_items.quantity + @qty", conn, transaction))
+                {
+                    cartCmd.Parameters.AddWithValue("cId", customerId);
+                    cartCmd.Parameters.AddWithValue("pId", productId);
+                    cartCmd.Parameters.AddWithValue("qty", quantityForCart);
+                    cartCmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                return true;
             }
-            else
+            catch
             {
-                _activeCarts[customerId].Add(new Cart { ProductId = productId, Quantity = quantityForCart });
+                transaction.Rollback();
+                throw;
             }
-            return true;
         }
 
         public bool ReturnItemToInventory(int customerId, int productId, int quantityToReturn)
         {
-            if (!_activeCarts.ContainsKey(customerId))
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
+
+            try
             {
-                return false; // No active cart for this customer
-            }
+                int cartQuantity = 0;
+                using (var checkCart = new NpgsqlCommand("SELECT quantity FROM cart_items WHERE customer_id = @cId AND product_id = @pId", conn, transaction))
+                {
+                    checkCart.Parameters.AddWithValue("cId", customerId);
+                    checkCart.Parameters.AddWithValue("pId", productId);
+                    var result = checkCart.ExecuteScalar();
+                    if (result == null) return false;
+                    cartQuantity = Convert.ToInt32(result);
+                }
 
-            var customerCart = _activeCarts[customerId];
-            var cart = customerCart.Find(c => c.ProductId == productId);
-            if (cart == null || cart.Quantity < quantityToReturn)
+                if (cartQuantity < quantityToReturn)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
+                // Return stock to products table
+                using (var updateProd = new NpgsqlCommand("UPDATE products SET quantity = quantity + @qty WHERE id = @pId", conn, transaction))
+                {
+                    updateProd.Parameters.AddWithValue("qty", quantityToReturn);
+                    updateProd.Parameters.AddWithValue("pId", productId);
+                    updateProd.ExecuteNonQuery();
+                }
+
+                // Update or delete cart item
+                if (cartQuantity == quantityToReturn)
+                {
+                    using var deleteCart = new NpgsqlCommand("DELETE FROM cart_items WHERE customer_id = @cId AND product_id = @pId", conn, transaction);
+                    deleteCart.Parameters.AddWithValue("cId", customerId);
+                    deleteCart.Parameters.AddWithValue("pId", productId);
+                    deleteCart.ExecuteNonQuery();
+                }
+                else
+                {
+                    using var updateCart = new NpgsqlCommand("UPDATE cart_items SET quantity = quantity - @qty WHERE customer_id = @cId AND product_id = @pId", conn, transaction);
+                    updateCart.Parameters.AddWithValue("qty", quantityToReturn);
+                    updateCart.Parameters.AddWithValue("cId", customerId);
+                    updateCart.Parameters.AddWithValue("pId", productId);
+                    updateCart.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                return true;
+            }
+            catch
             {
-                return false; // Product not in cart or insufficient quantity to return
+                transaction.Rollback();
+                throw;
             }
-
-            var product = Inventory.Find(p => p.Id == productId);
-            if (product != null)
-            {
-                product.Quantity += quantityToReturn; // Return the items to inventory
-            }
-
-            cart.Quantity -= quantityToReturn;
-
-            if (cart.Quantity == 0)
-            {
-                customerCart.Remove(cart); // Remove the cart item if quantity is zero
-            }
-
-            return true;
-        }
-
-        public void ClearCustomerCart(int customerId)
-        {
-            if (! _activeCarts.ContainsKey(customerId)) { return; }
-
-            foreach(var cart in _activeCarts[customerId].ToList())
-            {
-                ReturnItemToInventory(customerId, cart.ProductId, cart.Quantity); // Return all items to inventory
-            }
-            _activeCarts.Remove(customerId); // Clear the cart
         }
 
         public bool CompleteCheckout(int customerId)
         {
-            if (!_activeCarts.ContainsKey(customerId))
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
+
+            try
             {
-                return false; // No active cart for this customer
+                int itemCount = 0;
+                using (var check = new NpgsqlCommand("SELECT COUNT(*) FROM cart_items WHERE customer_id = @cId", conn, transaction))
+                {
+                    check.Parameters.AddWithValue("cId", customerId);
+                    itemCount = Convert.ToInt32(check.ExecuteScalar());
+                }
+
+                if (itemCount == 0)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
+                // Clear customer cart items post checkout
+                using (var clearCmd = new NpgsqlCommand("DELETE FROM cart_items WHERE customer_id = @cId", conn, transaction))
+                {
+                    clearCmd.Parameters.AddWithValue("cId", customerId);
+                    clearCmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                return true;
             }
-            // Here you would typically process payment and finalize the order
-            _activeCarts.Remove(customerId); // Clear the cart after checkout
-            return true;
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }
