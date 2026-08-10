@@ -18,3 +18,7 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# run/rebuild
+run.txt
+rebuild.txt

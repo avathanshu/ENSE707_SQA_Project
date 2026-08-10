@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="P2.LoadGenerator/P2.LoadGenerator.csproj" />
   <Project Path="P3.Core/P3.Core.csproj" />
   <Project Path="P3.Dashboard/P3.Dashboard.csproj" />
 </Solution>
