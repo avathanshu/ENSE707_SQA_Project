@@ -1,0 +1,30 @@
+@* MainLayout.razor
+   Wraps every page: a left nav sidebar plus a main content area where the
+   current page's markup (@Body) is injected. *@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        @* NavLink automatically adds an "active" CSS class when its href
+           matches the current URL, so we get highlighting for free. *@
+        <nav class="flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    Live Dashboard
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="trends">
+                    Historical Trends
+                </NavLink>
+            </div>
+        </nav>
+    </div>
+
+    <main>
+        <article class="content px-4">
+            @* @Body is replaced with whichever page component the Router matched. *@
+            @Body
+        </article>
+    </main>
+</div>

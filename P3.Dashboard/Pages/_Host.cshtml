@@ -1,0 +1,31 @@
+@* _Host.cshtml
+   This is a plain Razor Page (not a Blazor component) — it's the actual
+   HTML page the browser first loads. It renders the <app> tag helper,
+   which boots up the App.razor component tree via Blazor Server's
+   SignalR connection. Program.cs's MapFallbackToPage("/_Host") routes
+   every unmatched URL here. *@
+@page "/"
+@namespace P3.Dashboard.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P3 Regression Dashboard</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+    @* component="typeof(App)" tells Blazor which root component to render
+       here; render-mode="ServerPrerendered" renders initial HTML on the
+       server first (fast first paint), then attaches interactivity over
+       the SignalR connection. *@
+    <component type="typeof(P3.Dashboard.App)" render-mode="ServerPrerendered" />
+
+    @* blazor.server.js establishes and maintains the SignalR connection
+       between this browser tab and the running server process. *@
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+@* App.razor
+   The root component of the Blazor app. <Router> inspects the current URL
+   and picks which page component to render, based on each page's @page
+   directive (e.g. Dashboard.razor has @page "/"). *@
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        @* A matching page was found: render it inside MainLayout so every
+           page automatically gets the shared nav/header without repeating it. *@
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(P3.Dashboard.Shared.MainLayout)" />
+    </Found>
+    <NotFound>
+        @* No page matched the URL: show a simple message, still inside the
+           same layout so styling stays consistent. *@
+        <LayoutView Layout="@typeof(P3.Dashboard.Shared.MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
