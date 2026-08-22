@@ -1,0 +1,327 @@
+Mid-Project Report: Peak-Load Capacity & Anomaly Detection Tool
+
+Detecting Peak-Load Performance Failures in E-Commerce Platforms Through ML-Based Anomaly and Regression Detection
+
+ENSE707: Software Quality Assurance
+
+Assessment 1 - Mid-Project Report
+
+Auckland University of Technology
+
+Suemon Kwok (14883335)
+
+Quentin Masoe (23191960)
+
+Avathanshu Bhat (23227963)
+
+[Submission date]
+
+Word count (excl. references, tables and appendices): approx. 2,050 words
+
+GitHub repository: github.com/avathanshu/ENSE707_SQA_Project
+
+1. Problem Definition and Approval
+
+In November 2025, Shopify — the e-commerce platform underpinning millions of independent online stores — experienced a significant outage during Cyber Monday peak trading, leaving merchants unable to access checkout, cart, and inventory tools during the highest-revenue shopping event of the year. This incident is not an isolated case: e-commerce systems across the industry regularly perform acceptably under everyday load yet fail, slow down, or become unresponsive once concurrent demand spikes beyond the conditions exercised during development and pre-release testing.
+
+This is fundamentally a software quality assurance problem rather than a functional-correctness problem. The affected systems typically satisfy their functional requirements under normal conditions, but their non-functional quality attributes — particularly performance, reliability, and scalability — are inadequately verified against realistic peak-load and failure conditions before release (Siddique, 2026a). The common industry mitigation, fixed-threshold monitoring, only catches degradation once it crosses a pre-defined limit; it does not learn what "normal" response-time behaviour looks like from historical operation, so subtler anomalies and gradual build-over-build regressions can pass undetected until a customer-facing failure occurs.
+
+Several distinct software quality issues sit inside this one incident, and separating them clarifies what the project actually needs to measure. The first is a performance-efficiency issue: response time and throughput degrade as concurrency rises, and the point at which this happens is rarely known precisely because it is expensive to reproduce realistic peak-load conditions before release. The second is a reliability issue: a system can look reliable in isolation while still failing once a dependent service (payment, inventory, or notification) slows down under the same load, so reliability has to be assessed as a property of the whole request path, not a single component. The third is a monitoring and evidence issue rather than a coding issue: many teams only compare live metrics against a single fixed number, so a system that is degrading gradually, release after release, never crosses the alarm threshold until it is already too late. Framing the problem this way is what motivates the project's specific technical choices — load-profile variety, fault injection, a learned baseline, and cross-build regression tracking — rather than treating "the system was slow" as one undifferentiated failure.
+
+The stakeholders affected by this problem span the e-commerce supply chain: platform engineering and QA teams responsible for capacity planning and release sign-off, merchants who depend on platform availability for revenue, and end customers attempting to complete purchases during high-demand periods. The problem is well suited to a one-semester Software Quality Assurance project because it can be reproduced and demonstrated entirely offline using a small, self-built sample API modelled on a specific, well-documented target (Shopify's checkout, cart, and inventory functions) rather than a generic e-commerce concept, keeping the scope concrete, testable, and achievable within the available time. Splitting the work into three independently ownable modules — target system and load generation, ML.NET anomaly detection, and regression tracking with reporting — gives each of the three team members a demoable, separately gradable component while still contributing to one coherent quality problem.
+
+This problem, together with the enhanced three-person scope described in Section 3, was presented to and [TEAM: confirm exact approval date and mechanism, e.g. "approved by the course lecturer via email/Canvas on <date>" or "during the Week <n> consultation session"] approved by the course lecturer before detailed implementation began, consistent with the Assessment 1 requirement that the selected problem be approved prior to detailed implementation.
+
+2. Requirements and Quality Analysis
+
+2.1 How the Requirements Were Created
+
+Requirements were derived in two steps. First, the problem statement in Section 1 was used to identify the high-level stakeholder needs (avoid peak-load failure, detect regressions early, give the team visibility of quality trends). Second, these needs were tested against a structured set of client-style questions (Appendix A) that specifically probed vague terms such as "fast", "reliable", and "peak load", following the guidance that vague words are prompts for clarification rather than requirements in themselves (Siddique, 2026a). Each requirement was then written, or rewritten, using the testable-requirement pattern: "Under [conditions], the system shall perform [observable behaviour], producing [expected result], within [threshold or tolerance]" (Siddique, 2026a), so that two independent reviewers could reach the same pass/fail conclusion from a test.
+
+2.2 Functional and Non-Functional Requirements
+
+Table 1 lists the initial set of functional and non-functional requirements identified for the three project modules, together with the type classification and the owning member.
+
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Requirement                                                                                                                       Type             Owner
+  --------------------------------------------------------------------------------------------------------------------------------- ---------------- ---------
+  Response times stay within SLA thresholds under normal load.                                                                      Non-functional   P1
+
+  The system flags an SLA breach when p95 latency exceeds a defined threshold under N concurrent users.                             Functional       P1
+
+  The system supports multiple load profiles (steady ramp, spike, soak/endurance) against the sample API.                           Functional       P1
+
+  The system injects configurable latency/error faults into the sample API to validate anomaly-detection accuracy.                  Functional       P1
+
+  The system detects abnormal response-time patterns using ML.NET, not just fixed thresholds.                                       Functional       P2
+
+  The ML.NET anomaly detector's precision/recall is evaluated against a fixed-threshold baseline on the same historical run data.   Non-functional   P2
+
+  The system stores results across multiple test runs and flags build-over-build performance regression.                            Functional       P3
+
+  The dashboard displays live load-test metrics and breach/anomaly flags.                                                           Functional       P3
+
+  The dashboard displays a historical trend view of response-time and regression status across builds.                              Functional       P3
+
+  The system exports a QA report (breach log, anomaly log, trend chart) in a shareable format.                                      Functional       P3
+
+  The system operates fully offline, with no external network dependency.                                                           Non-functional   P1
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+2.3 Requirements Quality Analysis
+
+Each requirement was reviewed against the verification checklist of clarity, completeness, consistency, correctness, feasibility, and testability (Siddique, 2026a). For example, the initial idea for the performance requirement — "the system should respond quickly under load" — fails verification because "quickly" and "under load" have no agreed measurement context. It was rewritten as: "Under a steady-ramp load profile of N concurrent simulated users, the system shall flag an SLA breach whenever p95 response latency exceeds the configured threshold, measured over the run duration." This version is atomic, specifies the trigger condition, the observable behaviour, and the evaluation point, and can be judged pass or fail by any reviewer without relying on personal opinion.
+
+An example acceptance criterion, written in Given-When-Then form for the regression-flagging requirement, is:
+
+GIVEN a new build's load-test results have been persisted to the regression store
+
+AND the previous three builds' results for the same test profile are available
+
+WHEN the new build's mean response latency exceeds the historical baseline by more than the configured regression margin
+
+THEN the dashboard shall mark the build as a regression and record it in the exportable QA report.
+
+The requirements were also reviewed as a set, not only sentence by sentence, since two individually clear requirements can still conflict once combined (Siddique, 2026a). For example, the fixed-threshold baseline requirement and the ML.NET anomaly-detection requirement could be read as competing definitions of "abnormal" unless the requirement set makes explicit that the baseline is a comparison benchmark, not the system's actual detection mechanism; the requirement wording in Table 1 was checked to make sure this relationship, and not just each individual statement, was unambiguous.
+
+The relevant software quality attributes identified for this project, mapped loosely to ISO/IEC 25010 categories discussed in Week 2 (Siddique, 2026b), are performance efficiency (response-time behaviour under load), reliability (correct anomaly and regression detection, no false SLA confirmations), maintainability (documented ML.NET feature engineering and model limitations so the model can be retrained), and usability (a dashboard that surfaces breach, anomaly, and regression status without requiring the viewer to read raw log files).
+
+3. Proposed Solution and Initial Prototype
+
+The proposed solution is a self-contained C# tool that load-tests the team's sample API, measures response-time behaviour under increasing concurrent load, and flags performance breaches before they would reach production. Unlike a simple fixed-threshold checker, it uses ML.NET to learn what "normal" response-time behaviour looks like from historical test runs, allowing it to flag abnormal degradation even when a hard-coded limit is not crossed, and it persists results across builds so that gradual, build-over-build regressions — the kind of rigid, insufficient capacity planning behind the Shopify incident — are also visible rather than only within-run anomalies.
+
+The work is split into three independently ownable modules, each with its own functional requirements, so that contribution is separable and verifiable through individual GitHub commit history. Table 2 summarises ownership and scope.
+
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Module                                 Owner             Scope
+  -------------------------------------- ----------------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  P1 – Target System & Load Generation   Avathanshu Bhat   Sample e-commerce API (checkout, cart, inventory) built and controlled by the team; C# load generator that ramps concurrent users across steady-ramp, spike, and soak/endurance profiles; records latency, error rate, and throughput; configurable fault-injection module.
+
+  P2 – ML.NET Anomaly Detection          Quentin Masoe     Feature engineering from historical load-test run data; trains and evaluates an ML.NET anomaly model; benchmarks it against a naive fixed-threshold baseline with a precision/recall comparison; documents model limitations.
+
+  P3 – Regression Tracking & Reporting   Suemon Kwok       Persists results across multiple test runs/builds; detects build-over-build performance regression; builds the WinForms/Blazor dashboard with live metrics and historical trend view; generates an exportable QA report.
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A GUI is appropriate for this project because the P3 component is a reporting and decision-support dashboard: it needs to present live metrics, breach/anomaly flags, and historical trend charts to a viewer making a release-readiness judgement, which matches the Assessment 1 guidance that a GUI is expected where the solution involves reporting, dashboards, or end-user decision support. The dashboard's colour palette and layout are intentionally kept close to Shopify's own admin-console styling, since the sample API it reports on is deliberately modelled on Shopify's checkout/cart/inventory domain rather than a generic storefront, which keeps the prototype's visual language consistent with the real-world system that motivated the problem.
+
+At the time of writing, the GitHub repository's main branch contains the initial P3 scaffolding (P3.Core and P3.Dashboard projects, documented in P3-README.md) but the regression-detection logic and dashboard views are not yet built or runnable; [TEAM: replace this paragraph with the current status of P1 (API/load generator), P2 (ML.NET model), and P3, including a screenshot of whichever component is furthest along, before submission]
+
+4. AI-Assisted Development Using GitHub Copilot
+
+GitHub Copilot is being used across all three modules to support boilerplate coding, unit-test scaffolding, and documentation, in line with the Assessment 1 terms encouraging AI-assisted development provided all outputs are reviewed, validated, and understood by the student who submits them. Each member is keeping a short log of representative prompts and the suggestions accepted, modified, or rejected, so that AI use can be evidenced rather than merely claimed.
+
+4.1 Representative Example (P3 – Regression Tracking)
+
+The eleven test cases in Section 6 were also first drafted with Copilot rather than written from scratch, in line with the clarified task instructions. Copilot was given each requirement's acceptance criterion as a prompt and asked to propose test steps, inputs, and an expected result; this produced a reasonable first pass for straightforward cases such as TC-01 and TC-02, but consistently under-specified the concurrency-sensitive cases (TC-04 and TC-07), where its first draft described a single sequential request rather than the overlapping or multi-build sequence the requirement actually depends on. Every generated test case was therefore checked against the corresponding requirement and acceptance criterion before being accepted into Table 3, and the correction made to each case is treated as evidence of human validation rather than a failure of the tool.
+
+For example, when implementing the build-over-build comparison logic, Copilot was prompted with a comment describing the intended behaviour ("compare the new build's mean latency against the mean of the previous three builds for the same profile and return a regression flag if it exceeds the configured margin") and produced an initial method implementation. On review, the generated code compared the new build only against the immediately previous build rather than the three-build rolling mean specified in the prompt, and it did not guard against a division-by-zero when fewer than three prior builds existed. Both issues were corrected by hand, and a unit test was added to lock in the intended three-build rolling-mean behaviour before the fix was accepted.
+
+[TEAM: add one further concrete example each for P1 (e.g. the load generator or fault-injection module) and P2 (e.g. feature engineering or model evaluation code), including the prompt used, the suggestion Copilot produced, what was correct or incorrect about it, and the change made after review. Include at least one supporting screenshot per module, as required by the clarified task instructions.]
+
+4.2 Limitations and Reflection
+
+Across the examples reviewed so far, the recurring risks with Copilot-generated code are: (1) plausible-looking logic that silently narrows the scope of what was asked (e.g. comparing against one prior build instead of a rolling window); (2) missing edge-case handling, particularly around empty or small historical datasets; and (3) confident-sounding comments that do not match what the generated code actually does, which can mislead a reviewer who skims rather than tests. These risks mean Copilot is most useful for reducing the time spent on boilerplate and repetitive test scaffolding, while threshold values, statistical comparisons, and anomaly-classification logic still require the team to write and defend the test cases independently, as also required for Task 6 of this assessment.
+
+5. Initial Test Strategy and Test Planning
+
+This section defines the team's initial test strategy for the current phase of the project. It will be extended into a full test plan for the final report as the P1–P3 modules mature.
+
+5.1 Scope
+
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Item                        Description
+  --------------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  In scope                    Functional behaviour of the load generator, fault-injection module, and API endpoints; correctness of anomaly flags against known injected faults; correctness of build-over-build regression flags against constructed historical sequences; accuracy of dashboard metric and flag display; offline operation (no external network dependency).
+
+  Out of scope (this phase)   Full production-scale performance/soak testing over extended durations; formal security testing of the sample API; cross-browser or accessibility testing of the dashboard beyond its core WinForms/Blazor views; exhaustive coverage of every load profile combination. These are deferred to the final project phase, consistent with the mid-project scope of an initial, not final, test strategy.
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+5.2 Test Levels and Testing Approach
+
+The strategy uses the four core test levels — unit, integration, system, and acceptance (Siddique, 2026c) — mapped to the project as follows:
+
+-   Unit testing (MSTest): isolated logic such as SLA-breach threshold checks, the ML.NET feature-engineering functions, and the build-over-build comparison logic, each with dependencies mocked or replaced.
+
+-   Integration testing: the load generator against the sample API under a running load profile; the anomaly detector against a persisted batch of historical run data; the regression store against the dashboard's data-access layer.
+
+-   System testing: an end-to-end run from load-test execution, through anomaly/regression detection, to dashboard display and QA-report export.
+
+-   Acceptance-level checks: manual review of the exported QA report and dashboard views against the acceptance criteria defined in Section 2.3.
+
+Functional testing uses black-box techniques — equivalence partitioning and boundary-value analysis around capacity, concurrency, and latency thresholds — designed directly from the acceptance criteria, since acceptance criteria are a strong test basis even before a final test suite exists (Siddique, 2026c). Non-functional testing focuses on performance (response-time behaviour under the three load profiles) and reliability (the anomaly detector's precision/recall against the fixed-threshold baseline on identical historical data), reported as the primary non-functional evidence for this phase.
+
+5.3 Entry and Exit Criteria
+
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Criteria             Description
+  -------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Entry criteria       A buildable version of the relevant module is available in the repository; test data (synthetic historical run records) is prepared; the local/offline test environment is configured; no blocking integration failures between the module under test and its immediate dependencies.
+
+  Exit criteria        All planned unit tests for the module pass; no unresolved high-severity defects in the functionality under test; the anomaly detector's precision/recall has been recorded against the fixed-threshold baseline (even if not yet meeting a target); results are logged in the traceability matrix.
+  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Exit criteria express the evidence and risk tolerance the team has agreed for this phase; they do not claim that no defects remain (Siddique, 2026d).
+
+5.4 Test Environment, Tools, and Dependencies
+
+-   .NET 8 / C# solution with MSTest for unit and integration tests, run via the dotnet CLI and a GitHub Actions CI pipeline on each pull request.
+
+-   A local, file-based or SQLite regression-history store so the whole pipeline can run fully offline, consistent with the offline non-functional requirement.
+
+-   Synthetic historical load-test data generated by the team (rather than production data) to train and evaluate the ML.NET model and to construct build-over-build regression scenarios.
+
+-   WinForms/Blazor for the dashboard, exercised through manual system-level walkthroughs at this phase.
+
+6. Initial Test Cases and Requirements Traceability
+
+Table 3 sets out eleven initial test cases covering the key functional requirements and the selected non-functional requirements across all three modules; the required minimum of eight is exceeded so that each module (P1, P2, P3) has direct coverage. As instructed, these test cases were first drafted with GitHub Copilot from the acceptance criteria in Section 2.3, then reviewed and adjusted by hand: Copilot's initial draft for TC-07, for example, compared only two builds rather than the three-build baseline specified in the requirement, and the step description was corrected accordingly.
+
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ID      Test Case                                         Steps / Input                                                                                                                                     Expected Result                                                                                                   Requirement(s)                                       Type             Owner
+  ------- ------------------------------------------------- ------------------------------------------------------------------------------------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------- ---------------------------------------------------- ---------------- -------
+  TC-01   SLA breach flagged at threshold                   Configure p95 latency threshold = 200ms; run steady-ramp profile that produces p95 = 250ms.                                                       System flags an SLA breach for the run.                                                                           FR – SLA breach flag                                 Functional       P1
+
+  TC-02   No breach within threshold                        Configure p95 latency threshold = 200ms; run steady-ramp profile that produces p95 = 150ms.                                                       System does not flag an SLA breach.                                                                               FR – SLA breach flag                                 Functional       P1
+
+  TC-03   Load profile coverage                             Execute the load generator once under each of steady-ramp, spike, and soak/endurance profiles against the sample API.                             All three profiles complete and each produces a latency/error/throughput record.                                  FR – Multiple load profiles                          Functional       P1
+
+  TC-04   Fault injection is detected                       Enable configurable latency injection on the sample API; run a load profile.                                                                      The load generator records the elevated latency and the anomaly detector flags the run as abnormal.               FR – Fault injection; FR – Anomaly detection         Functional       P1/P2
+
+  TC-05   Anomaly detector vs baseline (precision/recall)   Run both the ML.NET detector and the fixed-threshold baseline over the same labelled historical dataset containing known injected anomalies.      Precision/recall for both approaches are calculated and recorded for comparison.                                  NFR – Detector benchmarked against baseline          Non-functional   P2
+
+  TC-06   No false positive on normal history               Run the ML.NET detector over a historical dataset with no injected faults.                                                                        The detector does not flag any run as anomalous.                                                                  FR – Anomaly detection                               Functional       P2
+
+  TC-07   Build-over-build regression detected              Persist three prior builds' results at baseline latency, then persist a new build with mean latency exceeding the configured regression margin.   The system flags the new build as a regression and records it in the regression store.                            FR – Regression tracking                             Functional       P3
+
+  TC-08   No regression on stable builds                    Persist four consecutive builds' results within the normal historical range.                                                                      No build is flagged as a regression.                                                                              FR – Regression tracking                             Functional       P3
+
+  TC-09   Dashboard reflects live and historical status     Load the dashboard after TC-01 (breach) and TC-07 (regression) have been recorded.                                                                Dashboard displays the SLA breach flag, the anomaly flag, and the historical trend view showing the regression.   FR – Dashboard display; FR – Historical trend view   Functional       P3
+
+  TC-10   QA report export                                  From the dashboard, trigger an export after at least one breach and one anomaly have been recorded.                                               An exportable QA report is produced containing the breach log, anomaly log, and trend chart.                      FR – QA report export                                Functional       P3
+
+  TC-11   Offline operation                                 Disconnect external network access and run the full pipeline (load test → detection → dashboard) end to end.                                      The pipeline completes successfully with no external network dependency.                                          NFR – Fully offline operation                        Non-functional   P1
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+6.1 Requirements Traceability Matrix
+
+Table 4 links each requirement to the test case(s) that will provide evidence for it. All entries currently show "Not run" because the prototype has not yet reached an executable state (see Section 3); this matrix will be updated with pass/fail/blocked status as the P1–P3 modules are implemented.
+
+  ----------------------------------------------------------------------------------
+  Requirement                                   Test Case(s)       Status
+  --------------------------------------------- ------------------ -----------------
+  FR – SLA breach flag                          TC-01, TC-02       Not run
+
+  FR – Multiple load profiles                   TC-03              Not run
+
+  FR – Fault injection                          TC-04              Not run
+
+  FR – Anomaly detection (ML.NET)               TC-04, TC-06       Not run
+
+  NFR – Detector benchmarked against baseline   TC-05              Not run
+
+  FR – Regression tracking                      TC-07, TC-08       Not run
+
+  FR – Dashboard live/historical display        TC-09              Not run
+
+  FR – QA report export                         TC-10              Not run
+
+  NFR – Fully offline operation                 TC-11              Not run
+  ----------------------------------------------------------------------------------
+
+Traceability supports quality assurance and change management by making two questions answerable at any point in the project: which requirements already have test evidence and what that evidence shows, and what must be reviewed or re-tested if a requirement changes (Siddique, 2026a). Because the matrix links in both directions, it also lets the team check backward from a test case to its requirement, which helps catch tests that exist without an approved basis as the three modules are integrated (Siddique, 2026a).
+
+7. Project Progress, Risks, and Next Steps
+
+7.1 Progress to Date
+
+-   Project problem, enhanced three-person scope, and module ownership confirmed and approved (Section 1).
+
+-   Initial functional and non-functional requirements identified and quality-reviewed against the clarity/completeness/consistency/feasibility/testability checklist (Section 2).
+
+-   GitHub repository set up with the P3 scaffolding (P3.Core, P3.Dashboard) documented in P3-README.md.
+
+-   Initial test strategy, eight-plus test cases, and requirements traceability matrix drafted (Sections 5–6).
+
+[TEAM: add/replace bullets above with the current state of P1 (API + load generator) and P2 (ML.NET pipeline) work, and note anything already implemented and running.]
+
+7.2 Current Limitations and Risks
+
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Risk                                                                                                                                                                     Likelihood   Impact    Mitigation
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ ------------ --------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  The ML.NET anomaly detector may show weak precision/recall because the synthetic training data does not realistically represent production-like latency distributions.   Medium       High      Use the teammate-generated synthetic dataset with deliberately varied load profiles and injected fault patterns; iterate on feature engineering once initial benchmark numbers are available.
+
+  Integrating three independently built modules (P1 API/load data, P2 model output, P3 storage/dashboard) may reveal mismatched data contracts.                            Medium       Medium    Agree a shared JSON schema for load-test run results before each module is built further, and integrate early and often through the shared GitHub Actions CI pipeline rather than at the end.
+
+  GitHub Copilot suggestions may narrow scope or omit edge cases without being obviously wrong, as observed in Section 4.1.                                                Medium       Medium    Require a written unit test for every Copilot-assisted method before it is merged, and keep the prompt/response log so mistakes can be reviewed as a team.
+
+  Uneven commit activity across the three modules could make individual contribution difficult to evidence.                                                                Low          Medium    Each member commits at least twice a week to their own module as required by the course terms, with commit messages describing the work completed.
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Risk exposure is treated as a function of likelihood and impact, and higher-risk areas — here, the ML.NET benchmark and the P1–P2–P3 integration points — are prioritised for earlier and more independent evidence in the next phase (Siddique, 2026d). Applying this consistently means the team is deliberately spending more of its remaining time on the ML.NET benchmark and the shared data contract than on lower-risk items such as dashboard styling, even though the latter is more visible in a demo.
+
+7.3 Plan for the Next Phase
+
+-   Complete the P1 sample API, load generator, and fault-injection module, and bring TC-01 to TC-04 and TC-11 to an executable state.
+
+-   Train and evaluate the P2 ML.NET model against the fixed-threshold baseline and record the precision/recall comparison from TC-05 and TC-06.
+
+-   Build the P3 regression store and dashboard to an executable state and bring TC-07 to TC-10 to "pass"/"fail" status, updating the traceability matrix accordingly.
+
+-   Extend the test strategy into a full test plan and expand security and extended-duration performance testing, which are explicitly out of scope for this phase (Section 5.1).
+
+7.4 Team Reflection
+
+Working across three ownable modules has made individual contribution easier to evidence through commit history, while the shared JSON-style data contract keeps the modules aligned to one integrated tool rather than three unrelated projects. GitHub Copilot has been most valuable for reducing time spent on repetitive scaffolding, such as MSTest boilerplate and initial method skeletons, but the team's early experience (Section 4) is that its suggestions still need to be tested and read carefully rather than accepted on sight, since they can look complete while quietly narrowing or missing the behaviour that was actually asked for. The clearest pattern so far is that Copilot's mistakes are rarely obvious syntax errors; they are quiet scope changes — comparing against one prior build instead of three, or handling the average case without the boundary case — which is precisely why the course's requirement to explain and defend every AI-assisted output, rather than simply submit it, has mattered in practice rather than being a box-ticking exercise. [TEAM: add specific reflections from each member on what they personally learned from AI-assisted coding, testing, or collaboration this phase.]
+
+8. Conclusion
+
+This mid-project report has defined a lecturer-approved, quality-focused problem grounded in a real 2025 industry incident; produced an initial set of functional and non-functional requirements reviewed for clarity, completeness, consistency, feasibility, and testability; outlined the proposed three-module solution and the current state of its initial prototype; documented the team's approach to AI-assisted development with GitHub Copilot, including a reviewed example and its limitations; and set out an initial test strategy, eleven test cases, and a requirements traceability matrix. The next phase will focus on bringing all three modules to an executable state, obtaining real pass/fail/blocked evidence against the traceability matrix, and extending the test strategy into a full test plan for the final report.
+
+References
+
+Siddique, A. (2026a). Requirements quality and testability [Lecture slides]. ENSE707 Software Quality Assurance, Auckland University of Technology.
+
+Siddique, A. (2026b). Software quality attributes and models [Lecture slides]. ENSE707 Software Quality Assurance, Auckland University of Technology.
+
+Siddique, A. (2026c). Software testing fundamentals [Lecture slides]. ENSE707 Software Quality Assurance, Auckland University of Technology.
+
+Siddique, A. (2026d). Test management: Planning, defects, monitoring and reporting [Lecture slides]. ENSE707 Software Quality Assurance, Auckland University of Technology.
+
+Appendix A: Client/Stakeholder Questions Used to Derive Requirements
+
+Because the project is based on a documented public incident rather than an available client, the team used a structured set of stakeholder-style questions — modelled on the kind of questions a platform engineering or merchant-support stakeholder would realistically ask — to turn the general problem statement into specific, testable requirements. Each question below is paired with the requirement it justified.
+
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Question asked                                                                                                              What it clarified                                                                                                            Requirement(s) justified
+  --------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------------- -----------------------------------------------------
+  "How quickly does the checkout/search need to respond, and under what load?"                                                95% of responses within a defined time at a defined concurrent-user level.                                                   SLA breach flag; response-time NFR
+
+  "What counts as 'peak' load for this platform — a fixed number of users, or a multiple of normal traffic?"                  Named load profiles (steady ramp, spike, soak/endurance) instead of one vague 'peak' figure.                                 Multiple load profiles requirement
+
+  "How do you currently decide something is 'abnormal' versus just a bad day? Would a fixed threshold be enough?"             Justifies using ML.NET learned-baseline detection in addition to, not instead of, a fixed-threshold comparison.              Anomaly detection + baseline benchmark requirements
+
+  "Do you care about a single bad test run, or about performance getting quietly worse release after release?"                Motivated the regression-tracking store and build-over-build comparison, not just within-run anomaly flags.                  Regression tracking requirement
+
+  "Who looks at these results, and what do they need to see to decide whether it's safe to release?"                          Justifies the dashboard's live metrics, breach/anomaly flags, and historical trend view, and the exportable QA report.       Dashboard display and QA report export requirements
+
+  "Can this run against real production traffic, or does it need to be self-contained for a student project?"                 Confirmed the fully offline, self-contained scope with no external network dependency.                                       Offline operation NFR
+
+  "How do you tell the difference between the system actually failing and the load generator or network being the problem?"   Motivated the configurable fault-injection module, to prove the detector reacts to real, deliberately induced degradation.   Fault injection requirement
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Appendix B: Individual Contribution Statements
+
+[Each member should replace their section below with roughly one page describing their specific contributions to date: features implemented, tests written, documentation produced, and links to representative commits. Keep the module ownership below as a starting point.]
+
+Suemon Kwok (14883335) — P3: Regression Tracking & Reporting
+
+[Add specific contributions, commit links, and screenshots for the P3.Core / P3.Dashboard work, and for the Section 4.1 Copilot example.]
+
+Quentin Masoe (23191960) — P2: ML.NET Anomaly Detection
+
+[Add specific contributions, commit links, and screenshots for the P2 feature engineering, model training, and baseline benchmarking work.]
+
+Avathanshu Bhat (23227963) — P1: Target System & Load Generation
+
+[Add specific contributions, commit links, and screenshots for the sample API, load generator, and fault-injection work.]
