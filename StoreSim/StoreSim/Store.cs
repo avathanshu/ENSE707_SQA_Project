@@ -158,6 +158,30 @@ namespace StoreSim
             }
         }
 
+        public List<Product> GetAllProducts()
+        {
+            var products = new List<Product>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new NpgsqlCommand("SELECT id, name, description, category, quantity, price FROM products Order By id", conn);
+            using var reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                products.Add(new Product
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Description = reader.GetString(2),
+                    Category = reader.GetString(3),
+                    Quantity = reader.GetInt32(4),
+                    Price = reader.GetDecimal(5)
+                });
+            }
+            return products;
+        }
+
         public bool CompleteCheckout(int customerId)
         {
             using var conn = new NpgsqlConnection(_connectionString);
@@ -194,6 +218,46 @@ namespace StoreSim
                 transaction.Rollback();
                 throw;
             }
+        }
+        
+        public List<CartDisplayItem> GetCustomerCart(int customerId)
+        {
+            var items = new List<CartDisplayItem>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Open();
+
+            string query = @"
+            SELECT ci.product_id, p.name, ci.quantity, p.price 
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.id
+            WHERE ci.customer_id = @cId";
+
+            using var cmd = new NpgsqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("cId", customerId);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new CartDisplayItem
+                {
+                    ProductId = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Quantity = reader.GetInt32(2),
+                    Price = reader.GetDecimal(3)
+                });
+            }
+            return items;
+        }
+
+        public bool CancelEntireOrder(int customerId)
+        {
+            // Fetch all items in cart and return them to inventory
+            var cartItems = GetCustomerCart(customerId);
+            foreach (var item in cartItems)
+            {
+                ReturnItemToInventory(customerId, item.ProductId, item.Quantity);
+            }
+            return true;
         }
     }
 }

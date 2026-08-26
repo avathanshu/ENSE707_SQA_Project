@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="StoreSim/StoreSim.csproj" />
+  <Project Path="StoreSimGUI/StoreSimGUI.csproj" Id="6cd85e49-2790-41d0-9d30-5c8f57eaa092" />
 </Solution>
