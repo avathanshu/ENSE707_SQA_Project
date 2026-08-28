@@ -1,0 +1,3 @@
+dotnet clean P3RegressionTracking.slnx
+dotnet restore P3RegressionTracking.slnx
+dotnet build P3RegressionTracking.slnx
