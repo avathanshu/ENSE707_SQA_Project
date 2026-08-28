@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj" Id="0100983a-01d2-47a2-8da9-9b4e3dc399ae" />
+  <Project Path="P2.LoadGenerator.csproj" />
+</Solution>
