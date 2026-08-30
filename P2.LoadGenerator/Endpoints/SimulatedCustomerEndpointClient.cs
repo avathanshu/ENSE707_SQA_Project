@@ -5,8 +5,7 @@ namespace P2.LoadGenerator.Endpoints;
 
 /// <summary>
 /// Stand-in for the real storefront while P1 (storefront + dataset) is still being built.
-/// Simulates realistic latency and an occasional error. Swap for
-/// <see cref="HttpCustomerEndpointClient"/> with no other code changes once P1 ships.
+/// Simulates realistic latency and an occasional error.
 /// </summary>
 public sealed class SimulatedCustomerEndpointClient : ICustomerEndpointClient
 {
