@@ -1,18 +1,6 @@
 using P2.LoadGenerator.Execution;
 
 namespace P2.LoadGenerator.Metrics;
-
-/// <summary>
-/// RECONSTRUCTED — this file was lost before I ever saw its original content. Rebuilt
-/// from how LoadGenerator.cs calls it (Aggregate(endpointName, allResults) returning
-/// one EndpointLoadMetric) and what EndpointLoadMetric.cs expects as inputs.
-///
-/// The percentile method here is simple nearest-rank (no interpolation between ranks)
-/// — fine for a semester project, but if your original implementation used a different
-/// method, your P95/P99 numbers may shift slightly from before. Worth a quick sanity
-/// check: feed it a small known list of latencies by hand and confirm the percentiles
-/// come out as expected.
-/// </summary>
 public sealed class RunMetricsAggregator
 {
     public EndpointLoadMetric Aggregate(string endpointName, IReadOnlyList<RequestResult> results)

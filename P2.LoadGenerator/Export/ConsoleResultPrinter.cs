@@ -3,10 +3,7 @@ using P2.LoadGenerator.Metrics;
 namespace P2.LoadGenerator.Export;
 
 /// <summary>
-/// Prints a completed run's results to the terminal. This replaces the JSON export
-/// path for now — the P3 handoff shape has open questions (BuildId source,
-/// ThroughputRps calculation) that need answers from the team before that's worth
-/// finishing. Swap this out for P3HandoffExporter once those are settled.
+/// Prints a completed run's results to the terminal. This replaces the JSON export path temporarily
 /// </summary>
 public sealed class ConsoleResultPrinter : IResultExporter
 {
