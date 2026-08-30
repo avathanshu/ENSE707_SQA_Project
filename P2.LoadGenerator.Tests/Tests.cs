@@ -161,14 +161,19 @@ public class Tests
         var result = await generator.RunAsync();
 
         Assert.IsNotNull(result);
-        Assert.AreEqual(1, result.EndpointMetrics.Count);
-        Assert.IsTrue(result.EndpointMetrics[0].FailureCount > 0,
+        Assert.HasCount(1, result.EndpointMetrics);
+        Assert.IsGreaterThan(0, result.EndpointMetrics[0].FailureCount,
             "Expected a high-error-rate run to record at least one failure.");
     }
 
     // Confirms the printed console output actually contains the endpoint
     // name and table header for a normal, one-endpoint result.
+    // [DoNotParallelize]: this test redirects the shared, process-wide
+    // Console.Out, so it can't safely run at the same time as the other
+    // console test below — without this, MSTest's default parallel
+    // execution causes the two tests' output to overwrite each other.
     [TestMethod]
+    [DoNotParallelize]
     public async Task ExportAsync_OneEndpoint_PrintsEndpointNameAndHeader()
     {
         var originalOut = Console.Out;
@@ -216,7 +221,10 @@ public class Tests
 
     // Confirms the printer doesn't throw on a run with no endpoint metrics
     // at all, and still prints the run-level info (label, profile, etc).
+    // [DoNotParallelize]: see comment on the test above — same shared
+    // Console.Out issue applies here.
     [TestMethod]
+    [DoNotParallelize]
     public async Task ExportAsync_NoEndpoints_PrintsHeaderWithoutThrowing()
     {
         var originalOut = Console.Out;

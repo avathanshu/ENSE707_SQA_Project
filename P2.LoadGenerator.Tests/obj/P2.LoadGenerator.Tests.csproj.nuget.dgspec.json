@@ -1,39 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator.Tests\\P2.LoadGenerator.Tests.csproj": {}
+    "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj": {}
   },
   "projects": {
-    "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator.Tests\\P2.LoadGenerator.Tests.csproj": {
+    "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator.Tests\\P2.LoadGenerator.Tests.csproj",
+        "projectUniqueName": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj",
         "projectName": "P2.LoadGenerator.Tests",
-        "projectPath": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator.Tests\\P2.LoadGenerator.Tests.csproj",
-        "packagesPath": "C:\\Users\\qdr5883\\.nuget\\packages\\",
-        "outputPath": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator.Tests\\obj\\",
+        "projectPath": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj",
+        "packagesPath": "/Users/avathanshubhat/.nuget/packages/",
+        "outputPath": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator.Tests/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\qdr5883\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/avathanshubhat/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\P2.LoadGenerator.csproj": {
-                "projectPath": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\P2.LoadGenerator.csproj"
+              "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/P2.LoadGenerator.csproj": {
+                "projectPath": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/P2.LoadGenerator.csproj"
               }
             }
           }
@@ -70,37 +64,41 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.24, 8.0.24]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.24, 8.0.24]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.103/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\P2.LoadGenerator.csproj": {
+    "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/P2.LoadGenerator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\P2.LoadGenerator.csproj",
+        "projectUniqueName": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/P2.LoadGenerator.csproj",
         "projectName": "P2.LoadGenerator",
-        "projectPath": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\P2.LoadGenerator.csproj",
-        "packagesPath": "C:\\Users\\qdr5883\\.nuget\\packages\\",
-        "outputPath": "H:\\Y3S2\\SQA\\ENSE707_SQA_Project-main\\ENSE707_SQA_Project-main\\P2.LoadGenerator\\obj\\",
+        "projectPath": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/P2.LoadGenerator.csproj",
+        "packagesPath": "/Users/avathanshubhat/.nuget/packages/",
+        "outputPath": "/Users/avathanshubhat/Documents/AUT/Y3S2/ENSE707 - SQA/assignment/ENSE707_SQA_Project/P2.LoadGenerator/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\qdr5883\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/avathanshubhat/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -135,12 +133,26 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.24, 8.0.24]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.osx-arm64",
+              "version": "[8.0.24, 8.0.24]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.24, 8.0.24]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.103/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
