@@ -5,8 +5,7 @@ using P2.LoadGenerator.Execution;
 namespace P2.LoadGenerator.Endpoints;
 
 /// <summary>
-/// Sends real HTTP requests at P1's customer endpoint. Use once the storefront exists;
-/// until then, use <see cref="SimulatedCustomerEndpointClient"/>.
+/// Sends real HTTP requests at P1's customer endpoint. 
 /// </summary>
 public sealed class HttpCustomerEndpointClient : ICustomerEndpointClient
 {
