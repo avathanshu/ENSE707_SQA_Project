@@ -1,7 +1,5 @@
 <Solution>
   <Project Path="../P2.LoadGenerator.Tests/P2.LoadGenerator.Tests.csproj" Id="0100983a-01d2-47a2-8da9-9b4e3dc399ae" />
-  <Project Path="../StoreSim/StoreSim/StoreSim.csproj" />
-  <Project Path="../StoreSim/StoreSimGUI/StoreSimGUI.csproj" />
   <Project Path="P2.LoadGenerator.csproj" />
   <Project Path="../P2.LoadGenerator.Gui/P2.LoadGenerator.Gui.csproj" />
 </Solution>

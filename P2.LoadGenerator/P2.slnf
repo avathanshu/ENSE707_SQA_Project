@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "P2.LoadGenerator.slnx",
+    "projects": [
+      "P2.LoadGenerator.csproj",
+      "..\\P2.LoadGenerator.Tests\\P2.LoadGenerator.Tests.csproj",
+      "..\\P2.LoadGenerator.Gui\\P2.LoadGenerator.Gui.csproj"
+    ]
+  }
+}
