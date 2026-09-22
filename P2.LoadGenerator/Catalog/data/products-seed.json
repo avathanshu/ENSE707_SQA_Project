@@ -1,0 +1,322 @@
+[
+  {
+    "Id": 1,
+    "Name": "Fast-Paced Board Game",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #1",
+    "Category": "Board Games",
+    "Quantity": 13,
+    "Price": 112.52
+  },
+  {
+    "Id": 2,
+    "Name": "Gemstone Dice Bag",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #2",
+    "Category": "Dice",
+    "Quantity": 27,
+    "Price": 111.79
+  },
+  {
+    "Id": 3,
+    "Name": "Heroic Mecha Model",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #3",
+    "Category": "Miniatures",
+    "Quantity": 79,
+    "Price": 17.61
+  },
+  {
+    "Id": 4,
+    "Name": "Supplement Rulebook",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #4",
+    "Category": "RPG Books",
+    "Quantity": 13,
+    "Price": 18.59
+  },
+  {
+    "Id": 5,
+    "Name": "Fine Detail Cutting Mat",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #5",
+    "Category": "Hobby Supplies",
+    "Quantity": 87,
+    "Price": 8.85
+  },
+  {
+    "Id": 6,
+    "Name": "Epic Playmat",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #6",
+    "Category": "Trading Cards",
+    "Quantity": 93,
+    "Price": 106.69
+  },
+  {
+    "Id": 7,
+    "Name": "Expansion Card Game",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #7",
+    "Category": "Board Games",
+    "Quantity": 67,
+    "Price": 90.44
+  },
+  {
+    "Id": 8,
+    "Name": "Metal Dice Bag",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #8",
+    "Category": "Dice",
+    "Quantity": 99,
+    "Price": 66.28
+  },
+  {
+    "Id": 9,
+    "Name": "Resin Warrior Mini",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #9",
+    "Category": "Miniatures",
+    "Quantity": 37,
+    "Price": 143.8
+  },
+  {
+    "Id": 10,
+    "Name": "Campaign Rulebook",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #10",
+    "Category": "RPG Books",
+    "Quantity": 21,
+    "Price": 60.09
+  },
+  {
+    "Id": 11,
+    "Name": "Matte Clippers",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #11",
+    "Category": "Hobby Supplies",
+    "Quantity": 87,
+    "Price": 43.36
+  },
+  {
+    "Id": 12,
+    "Name": "Mystic Playmat",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #12",
+    "Category": "Trading Cards",
+    "Quantity": 68,
+    "Price": 82.75
+  },
+  {
+    "Id": 13,
+    "Name": "Expansion Board Game",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #13",
+    "Category": "Board Games",
+    "Quantity": 80,
+    "Price": 47.51
+  },
+  {
+    "Id": 14,
+    "Name": "Glowing Dice Tower",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #14",
+    "Category": "Dice",
+    "Quantity": 56,
+    "Price": 88.72
+  },
+  {
+    "Id": 15,
+    "Name": "Heroic Dragon Miniature",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #15",
+    "Category": "Miniatures",
+    "Quantity": 15,
+    "Price": 100.88
+  },
+  {
+    "Id": 16,
+    "Name": "Campaign Rulebook",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #16",
+    "Category": "RPG Books",
+    "Quantity": 39,
+    "Price": 130.64
+  },
+  {
+    "Id": 17,
+    "Name": "Sharp Clippers",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #17",
+    "Category": "Hobby Supplies",
+    "Quantity": 68,
+    "Price": 97.17
+  },
+  {
+    "Id": 18,
+    "Name": "Legendary Starter Deck",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #18",
+    "Category": "Trading Cards",
+    "Quantity": 57,
+    "Price": 56.51
+  },
+  {
+    "Id": 19,
+    "Name": "Fast-Paced Dungeon Crawler",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #19",
+    "Category": "Board Games",
+    "Quantity": 99,
+    "Price": 140.81
+  },
+  {
+    "Id": 20,
+    "Name": "Glowing Dice Set",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #20",
+    "Category": "Dice",
+    "Quantity": 87,
+    "Price": 97.07
+  },
+  {
+    "Id": 21,
+    "Name": "Monster Mecha Model",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #21",
+    "Category": "Miniatures",
+    "Quantity": 41,
+    "Price": 28.69
+  },
+  {
+    "Id": 22,
+    "Name": "Supplement Sourcebook",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #22",
+    "Category": "RPG Books",
+    "Quantity": 91,
+    "Price": 104.78
+  },
+  {
+    "Id": 23,
+    "Name": "Fine Detail Primer Spray",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #23",
+    "Category": "Hobby Supplies",
+    "Quantity": 51,
+    "Price": 127.21
+  },
+  {
+    "Id": 24,
+    "Name": "Mystic Starter Deck",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #24",
+    "Category": "Trading Cards",
+    "Quantity": 14,
+    "Price": 121.73
+  },
+  {
+    "Id": 25,
+    "Name": "Expansion Dungeon Crawler",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #25",
+    "Category": "Board Games",
+    "Quantity": 18,
+    "Price": 35.59
+  },
+  {
+    "Id": 26,
+    "Name": "Silicone Precision Dice",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #26",
+    "Category": "Dice",
+    "Quantity": 50,
+    "Price": 35.83
+  },
+  {
+    "Id": 27,
+    "Name": "Detailed Wizard Figurine",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #27",
+    "Category": "Miniatures",
+    "Quantity": 92,
+    "Price": 71.53
+  },
+  {
+    "Id": 28,
+    "Name": "Campaign Monster Manual",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #28",
+    "Category": "RPG Books",
+    "Quantity": 41,
+    "Price": 113.02
+  },
+  {
+    "Id": 29,
+    "Name": "Pro Clippers",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #29",
+    "Category": "Hobby Supplies",
+    "Quantity": 84,
+    "Price": 67.12
+  },
+  {
+    "Id": 30,
+    "Name": "Standard Foil Promo Card",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #30",
+    "Category": "Trading Cards",
+    "Quantity": 56,
+    "Price": 36.8
+  },
+  {
+    "Id": 31,
+    "Name": "Co-op Party Game",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #31",
+    "Category": "Board Games",
+    "Quantity": 73,
+    "Price": 18.18
+  },
+  {
+    "Id": 32,
+    "Name": "Metal Dice Set",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #32",
+    "Category": "Dice",
+    "Quantity": 29,
+    "Price": 95.98
+  },
+  {
+    "Id": 33,
+    "Name": "Heroic Wizard Figurine",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #33",
+    "Category": "Miniatures",
+    "Quantity": 86,
+    "Price": 14.21
+  },
+  {
+    "Id": 34,
+    "Name": "Supplement Campaign Guide",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #34",
+    "Category": "RPG Books",
+    "Quantity": 69,
+    "Price": 81.72
+  },
+  {
+    "Id": 35,
+    "Name": "Pro Paint Set",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #35",
+    "Category": "Hobby Supplies",
+    "Quantity": 97,
+    "Price": 109.5
+  },
+  {
+    "Id": 36,
+    "Name": "Dark Deck Box",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #36",
+    "Category": "Trading Cards",
+    "Quantity": 44,
+    "Price": 116.45
+  },
+  {
+    "Id": 37,
+    "Name": "Strategic Board Game",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #37",
+    "Category": "Board Games",
+    "Quantity": 47,
+    "Price": 68.04
+  },
+  {
+    "Id": 38,
+    "Name": "Oversized D20 Dice Set",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #38",
+    "Category": "Dice",
+    "Quantity": 43,
+    "Price": 145.92
+  },
+  {
+    "Id": 39,
+    "Name": "Unpainted Terrain Ruin",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #39",
+    "Category": "Miniatures",
+    "Quantity": 23,
+    "Price": 131.23
+  },
+  {
+    "Id": 40,
+    "Name": "Campaign Player Handbook",
+    "Description": "High-quality tabletop hobby item, perfect for game nights and collectors. Stock ref #40",
+    "Category": "RPG Books",
+    "Quantity": 74,
+    "Price": 93.3
+  }
+]

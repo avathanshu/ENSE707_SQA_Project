@@ -1,3 +1,4 @@
+using P2.LoadGenerator.Catalog;
 using P2.LoadGenerator.Configuration;
 using P2.LoadGenerator.Endpoints;
 using P2.LoadGenerator.Execution;
@@ -32,14 +33,23 @@ ICustomerEndpointClient endpointClient = new SimulatedCustomerEndpointClient(
     errorRate: 0.02,
     seed: 42);
 
-var requestFactory = new RandomCustomerRequestFactory(seed: 42);
+// Uses P1's real product catalogue shape (see Catalog/ProductCatalogLoader) instead of
+// the fake five-SKU list, now that P1's data contract is known.
+var requestFactory = new CatalogCustomerRequestFactory(seed: 42);
 
 var loadGenerator = new LoadGenerator(config, endpointClient, requestFactory);
 
 Console.WriteLine($"Starting load test '{config.RunLabel}' with profile '{profile.Name}'...");
 var result = await loadGenerator.RunAsync();
 
-// Prints a formatted summary table to the terminal. Swap this for a JSON exporter
-// once the P3 handoff shape (BuildId source, ThroughputRps calculation) is settled.
+// Console summary for a human watching the run...
 IResultExporter printer = new ConsoleResultPrinter();
 await printer.ExportAsync(result);
+
+// ...and the automated handoff to P3: writes/append this run to the same JSON shape
+// P3's JsonTestRunStore reads, retiring the old manual console-copy step.
+IResultExporter jsonExporter = new JsonRunExporter(
+    filePath: Path.Combine(AppContext.BaseDirectory, "runs.json"),
+    buildId: Environment.GetEnvironmentVariable("BUILD_ID"));
+var writtenPath = await jsonExporter.ExportAsync(result);
+Console.WriteLine($"Run exported to P3-compatible JSON at: {writtenPath}");

@@ -3,7 +3,9 @@ using P2.LoadGenerator.Execution;
 namespace P2.LoadGenerator.Metrics;
 public sealed class RunMetricsAggregator
 {
-    public EndpointLoadMetric Aggregate(string endpointName, IReadOnlyList<RequestResult> results)
+    /// <param name="runDuration">Wall-clock duration of the run these results came from,
+    /// used only to compute <see cref="EndpointLoadMetric.ThroughputRps"/>.</param>
+    public EndpointLoadMetric Aggregate(string endpointName, IReadOnlyList<RequestResult> results, TimeSpan runDuration)
     {
         if (results.Count == 0)
         {
@@ -17,7 +19,8 @@ public sealed class RunMetricsAggregator
                 P50LatencyMs = 0,
                 P95LatencyMs = 0,
                 P99LatencyMs = 0,
-                MaxLatencyMs = 0
+                MaxLatencyMs = 0,
+                ThroughputRps = 0
             };
         }
 
@@ -35,8 +38,21 @@ public sealed class RunMetricsAggregator
             P50LatencyMs = Percentile(latencies, 0.50),
             P95LatencyMs = Percentile(latencies, 0.95),
             P99LatencyMs = Percentile(latencies, 0.99),
-            MaxLatencyMs = latencies[^1]
+            MaxLatencyMs = latencies[^1],
+            ThroughputRps = ComputeThroughputRps(successCount, runDuration)
         };
+    }
+
+    private static double ComputeThroughputRps(int successCount, TimeSpan runDuration)
+    {
+        // Guard the same way ErrorRatePercent guards its own divide-by-zero: a run with
+        // effectively no elapsed time can't sensibly report a rate.
+        if (runDuration.TotalSeconds <= 0)
+        {
+            return 0;
+        }
+
+        return Math.Round(successCount / runDuration.TotalSeconds, 2);
     }
 
     private static double Percentile(List<double> sortedLatencies, double percentile)
