@@ -16,6 +16,10 @@ public sealed record EndpointLoadMetric
     public required double P99LatencyMs { get; init; }
     public required double MaxLatencyMs { get; init; }
 
+    /// <summary>Successful requests per second sustained during the run. Required by P3's
+    /// TestRun/EndpointMetric data contract (see Documentation/P3-README.md).</summary>
+    public required double ThroughputRps { get; init; }
+
     public double ErrorRatePercent => TotalRequests == 0
         ? 0
         : Math.Round(FailureCount / (double)TotalRequests * 100, 2);

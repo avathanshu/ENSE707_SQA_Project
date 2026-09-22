@@ -57,7 +57,7 @@ public sealed class LoadGenerator : ILoadGenerator
 
         var completedAt = DateTimeOffset.UtcNow;
 
-        var endpointMetric = _aggregator.Aggregate(_config.CustomerEndpointPath, allResults);
+        var endpointMetric = _aggregator.Aggregate(_config.CustomerEndpointPath, allResults, elapsedClock.Elapsed);
 
         return new LoadTestRunResult
         {

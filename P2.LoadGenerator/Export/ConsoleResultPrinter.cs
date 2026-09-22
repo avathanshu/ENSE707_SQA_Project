@@ -16,13 +16,13 @@ public sealed class ConsoleResultPrinter : IResultExporter
         Console.WriteLine($"Completed: {result.CompletedAtUtc:u}");
         Console.WriteLine($"Duration:  {result.Duration}");
         Console.WriteLine();
-        Console.WriteLine($"{"Endpoint",-30} {"Reqs",6} {"Fail",6} {"Avg(ms)",9} {"P50",7} {"P95",7} {"P99",7} {"Err%",6}");
+        Console.WriteLine($"{"Endpoint",-30} {"Reqs",6} {"Fail",6} {"Avg(ms)",9} {"P50",7} {"P95",7} {"P99",7} {"Err%",6} {"Rps",8}");
 
         foreach (var m in result.EndpointMetrics)
         {
             Console.WriteLine(
                 $"{m.EndpointName,-30} {m.TotalRequests,6} {m.FailureCount,6} " +
-                $"{m.AverageLatencyMs,9:F2} {m.P50LatencyMs,7:F2} {m.P95LatencyMs,7:F2} {m.P99LatencyMs,7:F2} {m.ErrorRatePercent,6:F2}");
+                $"{m.AverageLatencyMs,9:F2} {m.P50LatencyMs,7:F2} {m.P95LatencyMs,7:F2} {m.P99LatencyMs,7:F2} {m.ErrorRatePercent,6:F2} {m.ThroughputRps,8:F2}");
         }
 
         Console.WriteLine();

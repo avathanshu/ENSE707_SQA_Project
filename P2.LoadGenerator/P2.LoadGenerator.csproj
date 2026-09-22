@@ -8,4 +8,10 @@
     <RootNamespace>P2.LoadGenerator</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="Catalog\data\products-seed.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
